@@ -1,5 +1,7 @@
 import cmd
 import sqlite3
+import pyfiglet
+import os
 
 def recreate_tasks_table(conn, cursor):
     cursor.execute(f'''
@@ -60,7 +62,8 @@ def init_db(conn,cursor):
 
 
 class CLI(cmd.Cmd):
-    intro = 'Welcome to the C2 CLI Interface. Type help or ? to list commands.\n'
+    intro = f"""{pyfiglet.figlet_format("Commander")}\n\nType help or ? to list commands.\n\n\n"""
+    #intro = 'Welcome to the C2 CLI Interface. Type help or ? to list commands.\n'
     prompt = 'c2_cli> '
     conn = None
     cursor = None
@@ -351,6 +354,7 @@ if __name__ == '__main__':
         init_db(conn,cursor)
 
         mycli = CLI(conn,cursor)
+        os.system('clear')
         mycli.cmdloop()
 
     except Exception as ex:
