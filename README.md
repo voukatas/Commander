@@ -95,4 +95,10 @@ Below is the flow diagram for this case.
 
 ![screenshot](screenshots/c2_reregister_flow2.jpg)
 
+### Testing
+pytest was used for the testing. You can run the tests like this:
+```
+py.test
+```
+
 **Disclaimer**: This tool is only intended to be a proof of concept demonstration tool for authorized security testing. Running this tool against hosts that you do not have explicit permission to test is illegal. You are responsible for any trouble you may cause by using this tool.
