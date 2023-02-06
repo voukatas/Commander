@@ -3,7 +3,7 @@
 # start 100 instances of the program in background
 for i in {1..100}
 do
-    ./agent &
+    ./Agents/agent &
 done
 
 # wait a little

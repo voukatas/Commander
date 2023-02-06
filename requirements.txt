@@ -1,3 +1,4 @@
-flask
-requests
-pyfiglet
+Flask==2.2.2
+pyfiglet==0.8.post0
+pytest==7.1.2
+requests==2.28.1
