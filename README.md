@@ -139,8 +139,11 @@ task add all c2-sleep 30
 ## Testing
 pytest was used for the testing. You can run the tests like this:
 ```
+cd tests/
 py.test
 ```
+**Be careful**: You must run the tests inside the tests directory otherwise your c2.db will be overwritten and you will lose your data
+
 To check the code coverage and produce a nice html report you can use this:
 ```
 # pip3 install pytest-cov
