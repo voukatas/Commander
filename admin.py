@@ -77,6 +77,20 @@ class CLI(cmd.Cmd):
         self.conn = conn
         self.cursor = cursor
 
+    def print_rows(self, three_args = False, num = False, number = 0):
+        for i, row in enumerate(self.cursor.fetchall()):
+            if num:
+                if three_args:
+                    print(f'[{number+1}] {row[0]} {row[1]} {row[2]}')
+                else:
+                    print(f'[{number+1}] {row[0]} {row[1]}')
+            else:
+                if three_args:
+                    print(f'[{i+1}] {row[0]} {row[1]} {row[2]}')
+                else:
+                    print(f'[{i+1}] {row[0]} {row[1]}')
+
+
     def add_agent(self, uuid_str, type, ip):
             self.cursor.execute("INSERT INTO hosts (uuid, type, ip) VALUES (?,?,?)", (uuid_str, type, ip))
             self.conn.commit()
@@ -178,46 +192,53 @@ class CLI(cmd.Cmd):
             uuid_str = args[1]
             if uuid_str == 'all':
                 self.cursor.execute('SELECT * FROM hosts')
-                for row in self.cursor.fetchall():
-                    print(row[0], row[1], row[2])
+                self.print_rows(True)
+                # for i, row in enumerate(self.cursor.fetchall()):
+                # #for row in self.cursor.fetchall():
+                #     print(f'[{i+1}]{row[0]}, {row[1]}, {row[2]}')
 
             elif "type" in uuid_str:
                 uuid_str = uuid_str.split('=')
                 if uuid_str[1] in ["linux", "windows"]:                        
                     self.cursor.execute('SELECT * FROM hosts WHERE type=?',(uuid_str[1],))
-                    for row in self.cursor.fetchall():
-                        print(row[0], row[1], row[2])
+                    self.print_rows(True)
+                    # for i, row in enumerate(self.cursor.fetchall()):
+                    #     print(f'[{i+1}]{row[0]}, {row[1]}, {row[2]}')
 
             else:
                 self.cursor.execute('SELECT * FROM hosts WHERE uuid=?',(uuid_str,))
-                for row in self.cursor.fetchall():
-                    print(row[0], row[1], row[2])
+                self.print_rows(True)
+                # for i, row in enumerate(self.cursor.fetchall()):
+                #     print(f'[{i+1}]{row[0]}, {row[1]}, {row[2]}')
 
         elif args[0] == "task":
             if len(args) > 1:
                 uuid_str = args[1]
                 if uuid_str == 'all':
                     self.cursor.execute('SELECT * FROM tasks')
-                    for row in self.cursor.fetchall():
-                        print(row[0], row[1])
+                    self.print_rows()
+                    # for i, row in enumerate(self.cursor.fetchall()):
+                    #     print(f'[{i+1}]{row[0]}, {row[1]}')
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
                     if uuid_str[1] in ["linux", "windows"]:                        
                         self.cursor.execute('SELECT * FROM hosts WHERE type=?',(uuid_str[1],))
                         uuids = [r[0] for r in self.cursor.fetchall()]
-                        for u in uuids:
+                        for i, u in enumerate(uuids):
                             self.cursor.execute('SELECT * FROM tasks WHERE uuid=?',(u,))
-                            for row in self.cursor.fetchall():
-                                print(row[0], row[1])
+                            self.print_rows(False, num = True, number = i)
+                            # for i, row in enumerate(self.cursor.fetchall()):
+                            #     print(f'[{i+1}]{row[0]}, {row[1]}')
                             
                     else:
                         self.do_help("task") 
 
                 else:
                     self.cursor.execute('SELECT * FROM tasks WHERE uuid=?',(uuid_str,))
-                    for row in self.cursor.fetchall():
-                        print(row[0], row[1])
+                    self.print_rows()
+                    # for i, row in enumerate(self.cursor.fetchall()):
+                    #     print(f'[{i+1}]{row[0]}, {row[1]}')
             else:
                 self.do_help("show task")
         elif args[0] == "result":
@@ -225,8 +246,9 @@ class CLI(cmd.Cmd):
                 uuid_str = args[1]
                 if uuid_str == 'all':
                     self.cursor.execute('SELECT * FROM results')                    
-                    for row in self.cursor.fetchall():
-                        print(row[0], row[1])
+                    self.print_rows()
+                    # for i, row in enumerate(self.cursor.fetchall()):
+                    #     print(f'[{i+1}]{row[0]}, {row[1]}')
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
@@ -235,13 +257,15 @@ class CLI(cmd.Cmd):
                         uuids = [r[0] for r in self.cursor.fetchall()]
                         for u in uuids:
                             self.cursor.execute('SELECT * FROM results WHERE uuid=?',(u,))
-                            for row in self.cursor.fetchall():
-                                print(row[0], row[1])
+                            self.print_rows()
+                            # for i, row in enumerate(self.cursor.fetchall()):
+                            #     print(f'[{i+1}]{row[0]}, {row[1]}')
 
                 elif uuid_str:
                     self.cursor.execute('SELECT * FROM results WHERE uuid=?',(uuid_str,))
-                    for row in self.cursor.fetchall():
-                        print(row[0], row[1])
+                    self.print_rows()
+                    # for i, row in enumerate(self.cursor.fetchall()):
+                    #     print(f'[{i+1}]{row[0]}, {row[1]}')
             else:
                 self.do_help("show result")
         else:

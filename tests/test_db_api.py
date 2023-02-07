@@ -71,7 +71,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()
         
-        assert "testUUID1 c2-shell id\ntestUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n[3] testUUID3 c2-shell id\n" == captured.out    
 
 
     def test_task_add_uuid(self):
@@ -99,7 +99,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"task {uuid1}")
         captured = self.capsys.readouterr()
         
-        assert "testUUID1 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n" == captured.out    
 
 
     def test_task_add_type_linux(self):
@@ -127,7 +127,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"task type=linux")
         captured = self.capsys.readouterr()
         
-        assert "testUUID1 c2-shell id\ntestUUID2 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n" == captured.out    
 
         # confirm that only type=linux agents were changed
         test_cli.do_show(f"task type=windows")
@@ -136,7 +136,7 @@ class FlaskrTestCase(unittest.TestCase):
         assert "" == captured.out    
 
 
-    def test_task_add_type_linux(self):
+    def test_task_add_type_windows(self):
 
         # register agents
         uuid1 = "testUUID1"
@@ -161,7 +161,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"task type=windows")
         captured = self.capsys.readouterr()
         
-        assert "testUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out    
+        assert "[1] testUUID2 c2-shell id\n[2] testUUID3 c2-shell id\n" == captured.out    
 
         # confirm that only type=linux agents were changed
         test_cli.do_show(f"task type=linux")
@@ -193,7 +193,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"result all")
         captured = self.capsys.readouterr()
         
-        assert "testUUID1 root\ntestUUID2 root\ntestUUID3 root\n" == captured.out    
+        assert "[1] testUUID1 root\n[2] testUUID2 root\n[3] testUUID3 root\n" == captured.out    
 
 
     def test_show_result_type(self):
@@ -219,7 +219,7 @@ class FlaskrTestCase(unittest.TestCase):
         test_cli.do_show(f"result type=linux")
         captured = self.capsys.readouterr()
         
-        assert "testUUID1 root\n" == captured.out    
+        assert "[1] testUUID1 root\n" == captured.out    
         
         test_cli.do_show(f"result type=windows")
         captured = self.capsys.readouterr()
@@ -249,15 +249,15 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"result {uuid1}")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 root\n" == captured.out    
+        assert "[1] testUUID1 root\n" == captured.out    
         
         test_cli.do_show(f"result {uuid2}")
         captured = self.capsys.readouterr()        
-        assert "testUUID2 kali\n" == captured.out    
+        assert "[1] testUUID2 kali\n" == captured.out    
 
         test_cli.do_show(f"result {uuid3}")
         captured = self.capsys.readouterr()        
-        assert "testUUID3 commander\n" == captured.out    
+        assert "[1] testUUID3 commander\n" == captured.out    
         
 
 
@@ -285,7 +285,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 c2-shell id\ntestUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n[3] testUUID3 c2-shell id\n" == captured.out    
 
         # delete all
         test_cli.do_task("delete all")
@@ -322,7 +322,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 c2-shell id\ntestUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n[3] testUUID3 c2-shell id\n" == captured.out    
 
         # delete all
         test_cli.do_task(f"delete {uuid1}")
@@ -331,7 +331,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()        
-        assert "testUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out  
+        assert "[1] testUUID2 c2-shell id\n[2] testUUID3 c2-shell id\n" == captured.out  
 
 
     def test_task_delete_type(self):
@@ -358,7 +358,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 c2-shell id\ntestUUID2 c2-shell id\ntestUUID3 c2-shell id\n" == captured.out    
+        assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n[3] testUUID3 c2-shell id\n" == captured.out    
 
         # delete all
         test_cli.do_task(f"delete type=linux")
@@ -367,7 +367,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"task all")
         captured = self.capsys.readouterr()        
-        assert "testUUID3 c2-shell id\n" == captured.out  
+        assert "[1] testUUID3 c2-shell id\n" == captured.out  
 
 
     def test_show_agent_all(self):
@@ -385,7 +385,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"agent all")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 linux 192.168.1.1\ntestUUID2 linux 192.168.1.1\ntestUUID3 windows 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n[3] testUUID3 windows 192.168.1.1\n" == captured.out  
 
 
     def test_show_agent_uuid(self):
@@ -403,7 +403,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"agent {uuid2}")
         captured = self.capsys.readouterr()        
-        assert "testUUID2 linux 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID2 linux 192.168.1.1\n" == captured.out  
 
 
     def test_show_agent_type(self):
@@ -421,7 +421,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli.do_show(f"agent type=linux")
         captured = self.capsys.readouterr()        
-        assert "testUUID1 linux 192.168.1.1\ntestUUID2 linux 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n" == captured.out  
 
 
     def test_find_active_agents(self):
@@ -443,7 +443,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         
         captured = self.capsys.readouterr()        
-        assert "testUUID1 linux 192.168.1.1\ntestUUID2 linux 192.168.1.1\ntestUUID3 windows 192.168.1.1\n" == captured.out 
+        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n[3] testUUID3 windows 192.168.1.1\n" == captured.out 
 
         #test_cli.do_find("active agents") 
         # with mock.patch.object(__builtins__, 'input', lambda: 'Y'):
