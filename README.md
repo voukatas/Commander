@@ -152,10 +152,10 @@ To open a session with one or more of your agents do the following.
 show agent all
 
 # enable the server to accept connections
-sessions server start
+sessions server start 5555
 
 # add a task for a session to your prefered agent
-task add your_prefered_agent_uuid_here c2-session
+task add your_prefered_agent_uuid_here c2-session 5555
 
 # display a list of available connections
 sessions list
@@ -168,6 +168,9 @@ id
 
 # return to the main cli
 go back
+
+# check if the server is running
+sessions server status
 
 # stop the sessions server
 sessions server stop
