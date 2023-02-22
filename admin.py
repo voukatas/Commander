@@ -149,35 +149,59 @@ class CLI(cmd.Cmd):
             print(f"\nSessions server is not running...\n")
             return
         try:
+            deactivated_agents = set()
             res = '-------------------------------- Sessions --------------------------------\n'
             # print(f'self.connections len : {len(self.connections)}')
             for i, conn in enumerate(self.connections):
                 # print(f'i : {i}')
-                try:
+                try:                    
                     send_msg(conn,str.encode(f'c2-sessions ping'))                    
                     conn.settimeout(5.0)
                     pong = recv_msg(conn)                   
                     
                     if not pong:
-                        del self.connections[i]
-                        del self.addresses[i]
+                        # del self.connections[i]
+                        # del self.addresses[i]
+                        deactivated_agents.add(i)                                                
                         continue
 
-                except:
+                except Exception as ex:
+                    # print(f'exception: {ex}')
                     # print(f'except i : {i}')
                     # print(f'self.connections len : {len(self.connections)}')
                     # print(f'self.addresses len : {len(self.addresses)}')
 
-                    del self.connections[i]
-                    del self.addresses[i]
+                    # del self.connections[i]
+                    # del self.addresses[i]
+                    
+                    deactivated_agents.add(i)
+                    continue                
 
-                    continue
+            # comment the following code if you don't want to delete and clear the connections and addresses lists
 
+            tmp_conn_lst = []
+            tmp_addr_lst = []
+
+            for i, conn in enumerate(self.connections):
+                if i not in deactivated_agents:
+                    tmp_conn_lst.append(self.connections[i])
+                    tmp_addr_lst.append(self.addresses[i])
+
+            self.connections = tmp_conn_lst
+            self.addresses = tmp_addr_lst
+
+            for i, conn in enumerate(self.connections):
+                # use this line if you don't use the clear lists                
+                #if i not in deactivated_agents:
                 res += f'[{i}] {self.addresses[i][0]} {self.addresses[i][1]} {self.addresses[i][2]}\n'            
+
             print(f'{res}')
             return
+
         except Exception as ex:
             print(f"Error on list_connections: {ex}")    
+            # import traceback
+            # traceback.print_exc()
             self.close_session_handler() 
 
     def socket_create(self):
@@ -695,7 +719,7 @@ class CLI(cmd.Cmd):
               "    arg: the index from the 'sessions list' result \n"
               "  sessions list\n"
               "    Displays the availiable sessions\n"              
-              "  sessions status\n"
+              "  sessions server status\n"
               "    Displays information on the session server status \n"   
               )
 
