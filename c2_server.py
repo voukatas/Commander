@@ -96,7 +96,7 @@ def create_app():
             decoded_data = result
 
             if is_b64_enabled:
-                decoded_data = base64.b64decode(result).decode("utf-8")
+                decoded_data = base64.b64decode(result).decode("utf-8", errors='ignore')
                 print("Decoded data:", decoded_data)        
 
             print(f'result: {decoded_data}')
