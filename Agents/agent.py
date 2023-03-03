@@ -69,6 +69,11 @@ def sessions_shell():
             sleep(5)
 
     if not has_socket:
+        try:
+            s.close()
+        except Exception:
+            # s wasn't created at all so pass
+            pass
         return
 
     has_pong = False

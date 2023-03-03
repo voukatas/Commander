@@ -2,6 +2,7 @@ import uuid
 import flask
 import sqlite3
 import base64
+import ssl
 
 is_b64_enabled = True
 
@@ -118,11 +119,11 @@ def create_app():
 
 
 if __name__ == '__main__':
-    #pip install pyopenssl    
-    # import ssl
-    # context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-    # context.load_cert_chain("server.crt", "server.key")
+    #pip install pyopenssl        
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain("server.crt", "server.key")
     app = create_app()
     #app.run(ssl_context='adhoc',debug=True)
     server_port = 5000
-    app.run(host = '0.0.0.0', port = server_port, ssl_context='adhoc')
+    #app.run(host = '0.0.0.0', port = server_port, ssl_context='adhoc')
+    app.run(host = '0.0.0.0', port = server_port, ssl_context=context, debug=True)
