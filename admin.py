@@ -8,6 +8,8 @@ from time import sleep
 from threading import Lock
 from _thread import *
 import struct
+import ssl
+
 
 def recreate_tasks_table(conn, cursor):
     cursor.execute(f'''
@@ -109,7 +111,7 @@ class CLI(cmd.Cmd):
         super().__init__()
         self.conn = conn
         self.cursor = cursor
-        self.host = ''
+        self.host = 'localhost'
         self.port = 5555
         self.ServerSocket = None
         self.connections = []
@@ -119,6 +121,7 @@ class CLI(cmd.Cmd):
         self.server_start_flag = False
         self.current_shell_conn = None        
         self.current_shell_idx = -1
+        self.ssl_socket_context = None
 
     def emptyline(self):
         pass       
@@ -226,8 +229,12 @@ class CLI(cmd.Cmd):
 
     def socket_bind(self):        
         try:
-            self.ServerSocket.bind((self.host, self.port))
+            self.ServerSocket.bind(('', self.port))
             self.ServerSocket.listen(10)
+
+            self.ssl_socket_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+
+            self.ssl_socket_context.load_cert_chain('server.crt', 'server.key')
 
         except Exception as ex:
             print(f"Error on socket_bind: {ex}")            
@@ -246,10 +253,12 @@ class CLI(cmd.Cmd):
 
         while True:
             try:                
-                conn, address = self.ServerSocket.accept()
+                client_socket, address = self.ServerSocket.accept()
+
+                conn = self.ssl_socket_context.wrap_socket(client_socket, server_side=True)               
                 
                 conn.setblocking(True)
-                client_rsp = recv_msg(conn).decode("utf-8")                
+                client_rsp = recv_msg(conn).decode("utf-8")                                
                 address = address + (client_rsp,)
 
                 with self._exit_sessions_lock:                    
@@ -306,7 +315,11 @@ class CLI(cmd.Cmd):
                 self.exit_session = True   
                 try:         
                     # sends a message to itself to close the connections
-                    s = socket.socket()
+                    local_socket = socket.socket()
+                    context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                    context.check_hostname = False
+                    context.verify_mode = ssl.CERT_NONE
+                    s = context.wrap_socket(local_socket, server_hostname=self.host)
                     s.connect((self.host, self.port))
                     send_msg(s,str.encode(f'local_msg'))                
                     s.close()

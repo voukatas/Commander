@@ -120,9 +120,9 @@ def create_app():
 if __name__ == '__main__':
     #pip install pyopenssl    
     # import ssl
-    # context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    # context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     # context.load_cert_chain("server.crt", "server.key")
     app = create_app()
-    app.run(ssl_context='adhoc',debug=True)
-    #server_port = 5000
-    #app.run(host = '0.0.0.0', port = server_port, ssl_context='adhoc')
+    #app.run(ssl_context='adhoc',debug=True)
+    server_port = 5000
+    app.run(host = '0.0.0.0', port = server_port, ssl_context='adhoc')
