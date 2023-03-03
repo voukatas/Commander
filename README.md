@@ -103,6 +103,9 @@ Sessions:
   sessions select arg
     Select in which session to attach.
     arg: the index from the 'sessions list' result 
+  sessions close arg
+    Close a session.\n"
+    arg: the index from the 'sessions list' result
   sessions list
     Displays the availiable sessions
 
@@ -233,6 +236,9 @@ The binary can be found under the dist directory.
 
 In case something fails you may need to update your python and pip libs. If it continues failing then ..well.. life happened
 
+3. Create new certs in each engagement
+
+4. Backup your c2.db, it is easy... just a file
 ## Testing
 pytest was used for the testing. You can run the tests like this:
 ```
