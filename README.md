@@ -1,25 +1,33 @@
 # Commander
-Commander is a command and control framework (C2) written in Python, Flask and SQLite. It comes built-in with two Linux agents written in Python and C.
+Commander is a command and control framework (C2) written in Python, Flask and SQLite. It comes with two agents written in Python and C.
+
+Not script-kiddie friendly
 
 ### Features
-- Fully encrypted communications (TLS)
+- Fully encrypted communication (TLS)
+- Multiple Agents
+- Obfuscation
+- Interactive Sessions
+- Scalable
 - Base64 data encoding
 - RESTful API
-- Supports CLI Clients
-- Comes with a built-in Agent written in C for small footprint
 
 ### Agents
 - Python 3
-  - Additionaly to the C agent the python agent supports also:
-    - sessions, an interactive shell between the admin and the agent
+  - The python agent supports:
+    - sessions, an interactive shell between the admin and the agent (like ssh)
     - obfuscation
+    - Both Windows and Linux systems
 - C
+  - The C agent supports only the basic functionality for now, the control of tasks for the agents
+  - Only for Linux systems
 
 ### Requirements
 Python >= 3.6 is required to run and the following dependencies
 ```
-Linux
+Linux for the admin.py and c2_server.py. (Untested for windows)
 apt install libcurl4-openssl-dev libb64-dev
+apt install openssl
 pip3 install -r requirements.txt
 ```
 
@@ -27,6 +35,11 @@ pip3 install -r requirements.txt
 ![screenshot](screenshots/commander_cli.jpg)
 
 ## How to Use it
+First create the required certs and keys
+```
+# if you want to secure your key with a passphrase exclude the -nodes
+openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
+```
 Start the admin.py module first in order to create a local sqlite db file
 ```
 python3 admin.py
@@ -194,7 +207,9 @@ This way you will have a 'die hard' shell that even if you get disconnected it w
 
 ## Obfuscation
 The python Agent offers obfuscation using a basic AES ECB encryption and base64 encoding
-Edit the obfuscator.py file and change the 'key' value to a 16 char lenght key in order to create a custom payload. The output of the new agent can be found in Agents/obs_agent.py
+
+Edit the obfuscator.py file and change the 'key' value to a 16 char length key in order to create a custom payload. The output of the new agent can be found in Agents/obs_agent.py
+
 You can run it like this:
 ```
 python3 obfuscator.py
@@ -202,6 +217,21 @@ python3 obfuscator.py
 # and to run the agent, do as usual
 python3 obs_agent.py
 ```
+
+## Tips &Tricks
+1. The build-in flask app server can't handle multiple/concurrent requests. So, you can use the gunicorn server for better performance like this:
+```
+gunicorn -w 4 "c2_server:create_app()" --access-logfile=- -b 0.0.0.0:5000 --certfile server.crt --keyfile server.key 
+```
+
+2. Create a binary file for your python agent like this
+```
+pip install pyinstaller
+pyinstaller --onefile agent.py
+```
+The binary can be found under the dist directory.
+
+In case something fails you may need to update your python and pip libs. If it continues failing then ..well.. life happened
 
 ## Testing
 pytest was used for the testing. You can run the tests like this:
