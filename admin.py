@@ -723,7 +723,7 @@ class CLI(cmd.Cmd):
             print("Sessions:\n\n"         
               "  sessions server arg [port]\n"
               "    Controls a session handler.\n"              
-              "    arg: can have the following values: 'start' or 'stop' \n"
+              "    arg: can have the following values: 'start' , 'stop' 'status' \n"
               "    port: port is optional for the start arg and if it is not provided it defaults to 5555. This argument defines the port of the sessions server\n"
               "  sessions select arg\n"
               "    Select in which session to attach.\n"
@@ -732,9 +732,7 @@ class CLI(cmd.Cmd):
               "    Close a session.\n"
               "    arg: the index from the 'sessions list' result \n"
               "  sessions list\n"
-              "    Displays the availiable sessions\n"              
-              "  sessions server status\n"
-              "    Displays information on the session server status \n"   
+              "    Displays the availiable sessions\n"               
               )
 
 if __name__ == '__main__':

