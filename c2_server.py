@@ -120,6 +120,7 @@ def create_app():
 
 if __name__ == '__main__':
     #pip install pyopenssl        
+    # openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.load_cert_chain("server.crt", "server.key")
     app = create_app()

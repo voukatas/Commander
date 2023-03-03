@@ -393,7 +393,7 @@ class CLI(cmd.Cmd):
                 
             elif "type" in uuid_str:
                 uuid_str = uuid_str.split('=')
-                if uuid_str[1] in ["linux", "windows"]:                    
+                if uuid_str[1] in ["Linux", "Windows"]:                    
                     self.cursor.execute('SELECT uuid FROM hosts WHERE type=?',(uuid_str[1],))
                     uuids = [r[0] for r in self.cursor.fetchall()]
                     for u in uuids:
@@ -417,7 +417,7 @@ class CLI(cmd.Cmd):
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
-                    if uuid_str[1] in ["linux", "windows"]:                        
+                    if uuid_str[1] in ["Linux", "Windows"]:                        
                         self.cursor.execute('SELECT uuid FROM hosts WHERE type=?',(uuid_str[1],))
                         uuids = [r[0] for r in self.cursor.fetchall()]
                         for u in uuids:
@@ -452,7 +452,7 @@ class CLI(cmd.Cmd):
 
             elif "type" in uuid_str:
                 uuid_str = uuid_str.split('=')
-                if uuid_str[1] in ["linux", "windows"]:                        
+                if uuid_str[1] in ["Linux", "Windows"]:                        
                     self.cursor.execute('SELECT * FROM hosts WHERE type=?',(uuid_str[1],))
                     self.print_rows(True)
                     # for i, row in enumerate(self.cursor.fetchall()):
@@ -475,7 +475,7 @@ class CLI(cmd.Cmd):
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
-                    if uuid_str[1] in ["linux", "windows"]:                        
+                    if uuid_str[1] in ["Linux", "Windows"]:                        
                         self.cursor.execute('SELECT * FROM hosts WHERE type=?',(uuid_str[1],))
                         uuids = [r[0] for r in self.cursor.fetchall()]
                         for i, u in enumerate(uuids):
@@ -505,7 +505,7 @@ class CLI(cmd.Cmd):
 
                 elif "type" in uuid_str:
                     uuid_str = uuid_str.split('=')
-                    if uuid_str[1] in ["linux", "windows"]:                        
+                    if uuid_str[1] in ["Linux", "Windows"]:                        
                         self.cursor.execute('SELECT * FROM hosts WHERE type=?',(uuid_str[1],))
                         uuids = [r[0] for r in self.cursor.fetchall()]
                         for u in uuids:
@@ -657,7 +657,7 @@ class CLI(cmd.Cmd):
         
         options = ["agent", "task", "result"]
         options_args = ["your_uuid", "all", "type="]
-        options_os = ["linux", "windows"]
+        options_os = ["Linux", "Windows"]
 
         if "show task" in line:
             if "show task" in line and (begidx==15):
@@ -705,7 +705,7 @@ class CLI(cmd.Cmd):
         print("Commands:\n\n"
               "  task add arg c2-commands\n"
               "    Add a task to an agent, to a group or on all agents.\n"
-              "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
+              "    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' \n"
               "    c2-commands: possible values are c2-register c2-shell c2-sleep c2-quit\n"
               "      c2-register: Triggers the agent to register again.\n"
               "      c2-shell cmd: It takes an shell command for the agent to execute. eg. c2-shell whoami\n"
@@ -716,16 +716,16 @@ class CLI(cmd.Cmd):
               "      c2-quit: Forces an agent to quit.\n\n"
               "  task delete arg\n"
               "    Delete a task from an agent or all agents.\n"
-              "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
+              "    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' \n"
               "  show agent arg\n"
               "    Displays info for all the availiable agents or for specific agent.\n"              
-              "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
+              "    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' \n"
               "  show task arg\n"
               "    Displays the task of an agent or all agents.\n"
-              "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
+              "    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' \n"
               "  show result arg\n"
               "    Displays the history/result of an agent or all agents.\n"
-              "    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' \n"
+              "    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' \n"
               "  find active agents\n"
               "    Drops the database so that the active agents will be registered again.\n\n"              
               "  exit\n"
