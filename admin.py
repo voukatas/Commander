@@ -156,7 +156,9 @@ class CLI(cmd.Cmd):
                             if filesize != -1:                                                                
                                 try:
 
-                                    with open(line.split()[1], 'wb') as f:
+                                    filename = os.path.basename(line.split()[1])
+
+                                    with open(filename, 'wb') as f:
                                         with tqdm.tqdm(total=filesize, unit='B', unit_scale=True) as pbar:
                                             bytes_received = 0
                                             while bytes_received < filesize:
