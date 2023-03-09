@@ -18,6 +18,7 @@ Not script-kiddie friendly
     - sessions, an interactive shell between the admin and the agent (like ssh)
     - obfuscation
     - Both Windows and Linux systems
+    - download/upload files functionality, currently only tested in linux systems. overall it is experimental
 - C
   - The C agent supports only the basic functionality for now, the control of tasks for the agents
   - Only for Linux systems
@@ -183,6 +184,12 @@ sessions select 0
 
 # run a command
 id
+
+# download the passwd file locally
+download /etc/passwd
+
+# upload a file (test.txt) in the directory where the agent is
+upload test.txt
 
 # return to the main cli
 go back
