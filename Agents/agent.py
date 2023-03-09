@@ -162,7 +162,9 @@ def sessions_shell():
 
                 if filesize > 0:                                                                
                     try:
-                        with open(filename, 'wb') as f:                            
+                        filename_base = os.path.basename(filename)
+
+                        with open(filename_base, 'wb') as f:                            
                             send_msg(client_socket, f"GO!{SEPARATOR}".encode())
                             bytes_received = 0
                             while bytes_received < filesize:
