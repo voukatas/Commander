@@ -137,6 +137,25 @@ class CLI(cmd.Cmd):
                 self.prompt = 'c2_cli> '
                 self.current_shell_conn = None
                 self.current_shell_idx = -1
+
+            elif "local-ls" in line:
+                try:
+                    arg_length = len(line.split())
+
+                    if arg_length > 2 or (arg_length == 2 and line.split()[1].startswith("-")):
+                        raise ValueError("Invalid argument")
+                    elif arg_length == 2:
+                        dir_path = line.split()[1]
+                    else:
+                        dir_path = os.getcwd()
+
+                    dir_list = os.listdir(dir_path)
+                    
+                    for dir_item in dir_list:
+                        print(dir_item)
+                except Exception as ex:
+                    print(f"Error: {ex}")
+
             else:
                 try:
                     if self.current_shell_conn:
@@ -831,6 +850,12 @@ class CLI(cmd.Cmd):
               "    arg: the index from the 'sessions list' result \n"
               "  sessions list\n"
               "    Displays the availiable sessions\n"               
+              "  local-ls directory\n"
+              "    Lists on your host the files on the selected directory \n"               
+              "  download 'file'\n"
+              "    Downloads the 'file' locally on the current directory \n"               
+              "  upload 'file'\n"
+              "    Uploads a file in the directory where the agent currently is \n"               
               )
 
 if __name__ == '__main__':
