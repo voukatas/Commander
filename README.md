@@ -1,6 +1,8 @@
 # Commander
 Commander is a command and control framework (C2) written in Python, Flask and SQLite. It comes with two agents written in Python and C.
 
+Under Continuous Development
+
 Not script-kiddie friendly
 
 ### Features
@@ -18,7 +20,7 @@ Not script-kiddie friendly
     - sessions, an interactive shell between the admin and the agent (like ssh)
     - obfuscation
     - Both Windows and Linux systems
-    - download/upload files functionality, currently only tested in linux systems. overall it is experimental
+    - download/upload files functionality
 - C
   - The C agent supports only the basic functionality for now, the control of tasks for the agents
   - Only for Linux systems
@@ -67,28 +69,28 @@ Commands:
 
   task add arg c2-commands
     Add a task to an agent, to a group or on all agents.
-    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' 
+    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' 
     c2-commands: possible values are c2-register c2-shell c2-sleep c2-quit
       c2-register: Triggers the agent to register again.
       c2-shell cmd: It takes an shell command for the agent to execute. eg. c2-shell whoami
          cmd: The command to execute.
       c2-sleep: Configure the interval that an agent will check for tasks.
-      c2-session port: Instructs the agent to open a shell session with the server.
+      c2-session port: Instructs the agent to open a shell session with the server to this port.
          port: The port to connect to. If it is not provided it defaults to 5555.
       c2-quit: Forces an agent to quit.
 
   task delete arg
     Delete a task from an agent or all agents.
-    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' 
+    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' 
   show agent arg
     Displays info for all the availiable agents or for specific agent.
-    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' 
+    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' 
   show task arg
     Displays the task of an agent or all agents.
-    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' 
+    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' 
   show result arg
     Displays the history/result of an agent or all agents.
-    arg: can have the following values: 'all' 'type=linux|windows' 'your_uuid' 
+    arg: can have the following values: 'all' 'type=Linux|Windows' 'your_uuid' 
   find active agents
     Drops the database so that the active agents will be registered again.
 
@@ -98,17 +100,24 @@ Commands:
 
 Sessions:
 
-  sessions server arg
+  sessions server arg [port]
     Controls a session handler.
-    arg: can have the following values: 'start' or 'stop' 
+    arg: can have the following values: 'start' , 'stop' 'status' 
+    port: port is optional for the start arg and if it is not provided it defaults to 5555. This argument defines the port of the sessions server
   sessions select arg
     Select in which session to attach.
     arg: the index from the 'sessions list' result 
   sessions close arg
-    Close a session.\n"
-    arg: the index from the 'sessions list' result
+    Close a session.
+    arg: the index from the 'sessions list' result 
   sessions list
     Displays the availiable sessions
+  local-ls directory
+    Lists on your host the files on the selected directory 
+  download 'file'
+    Downloads the 'file' locally on the current directory 
+  upload 'file'
+    Uploads a file in the directory where the agent currently is 
 
 ```
 
@@ -187,6 +196,9 @@ id
 
 # download the passwd file locally
 download /etc/passwd
+
+# list your files locally to check that passwd was created
+local-ls
 
 # upload a file (test.txt) in the directory where the agent is
 upload test.txt
