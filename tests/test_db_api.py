@@ -55,9 +55,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -83,7 +83,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
         #test_cli.add_agent(uuid2, "linux", "192.168.1.1")
         #test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
        
@@ -111,26 +111,26 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
-        test_cli.do_task(f"add type=linux c2-shell id")
+        test_cli.do_task(f"add type=Linux c2-shell id")
         captured = self.capsys.readouterr()
         
         #Task added for testUUID
         assert "\x1b[92mTask added for testUUID1\x1b[0m\n\x1b[92mTask added for testUUID2\x1b[0m\n" == captured.out
         #self.conn.commit()
 
-        test_cli.do_show(f"task type=linux")
+        test_cli.do_show(f"task type=Linux")
         captured = self.capsys.readouterr()
         
         assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n" == captured.out    
 
         # confirm that only type=linux agents were changed
-        test_cli.do_show(f"task type=windows")
+        test_cli.do_show(f"task type=Windows")
         captured = self.capsys.readouterr()
         
         assert "" == captured.out    
@@ -145,26 +145,26 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "windows", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Windows", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
-        test_cli.do_task(f"add type=windows c2-shell id")
+        test_cli.do_task(f"add type=Windows c2-shell id")
         captured = self.capsys.readouterr()
         
         #Task added for testUUID
         assert "\x1b[92mTask added for testUUID2\x1b[0m\n\x1b[92mTask added for testUUID3\x1b[0m\n" == captured.out
         #self.conn.commit()
 
-        test_cli.do_show(f"task type=windows")
+        test_cli.do_show(f"task type=Windows")
         captured = self.capsys.readouterr()
         
         assert "[1] testUUID2 c2-shell id\n[2] testUUID3 c2-shell id\n" == captured.out    
 
         # confirm that only type=linux agents were changed
-        test_cli.do_show(f"task type=linux")
+        test_cli.do_show(f"task type=Linux")
         captured = self.capsys.readouterr()
         
         assert "" == captured.out    
@@ -179,9 +179,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "windows", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Windows", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -205,9 +205,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "windows", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Windows", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -216,12 +216,12 @@ class FlaskrTestCase(unittest.TestCase):
         #test_cli.add_result(uuid3, "root")
         captured = self.capsys.readouterr()        
 
-        test_cli.do_show(f"result type=linux")
+        test_cli.do_show(f"result type=Linux")
         captured = self.capsys.readouterr()
         
         assert "[1] testUUID1 root\n" == captured.out    
         
-        test_cli.do_show(f"result type=windows")
+        test_cli.do_show(f"result type=Windows")
         captured = self.capsys.readouterr()
         
         assert "" == captured.out    
@@ -236,9 +236,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "windows", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Windows", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -270,9 +270,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -307,9 +307,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -343,9 +343,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")        
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")        
        
         # add task
         
@@ -361,7 +361,7 @@ class FlaskrTestCase(unittest.TestCase):
         assert "[1] testUUID1 c2-shell id\n[2] testUUID2 c2-shell id\n[3] testUUID3 c2-shell id\n" == captured.out    
 
         # delete all
-        test_cli.do_task(f"delete type=linux")
+        test_cli.do_task(f"delete type=Linux")
         captured = self.capsys.readouterr()        
         assert "OK!\n" == captured.out  
 
@@ -379,13 +379,13 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")              
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")              
 
         test_cli.do_show(f"agent all")
         captured = self.capsys.readouterr()        
-        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n[3] testUUID3 windows 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID1 Linux 192.168.1.1\n[2] testUUID2 Linux 192.168.1.1\n[3] testUUID3 Windows 192.168.1.1\n" == captured.out  
 
 
     def test_show_agent_uuid(self):
@@ -397,13 +397,13 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")              
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")              
 
         test_cli.do_show(f"agent {uuid2}")
         captured = self.capsys.readouterr()        
-        assert "[1] testUUID2 linux 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID2 Linux 192.168.1.1\n" == captured.out  
 
 
     def test_show_agent_type(self):
@@ -415,13 +415,13 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")              
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")              
 
-        test_cli.do_show(f"agent type=linux")
+        test_cli.do_show(f"agent type=Linux")
         captured = self.capsys.readouterr()        
-        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n" == captured.out  
+        assert "[1] testUUID1 Linux 192.168.1.1\n[2] testUUID2 Linux 192.168.1.1\n" == captured.out  
 
 
     def test_find_active_agents(self):
@@ -433,9 +433,9 @@ class FlaskrTestCase(unittest.TestCase):
 
         test_cli = CLI(self.conn,self.cursor)
 
-        test_cli.add_agent(uuid1, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid2, "linux", "192.168.1.1")
-        test_cli.add_agent(uuid3, "windows", "192.168.1.1")              
+        test_cli.add_agent(uuid1, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid2, "Linux", "192.168.1.1")
+        test_cli.add_agent(uuid3, "Windows", "192.168.1.1")              
 
         test_cli.do_show(f"agent all")
 
@@ -443,7 +443,7 @@ class FlaskrTestCase(unittest.TestCase):
 
         
         captured = self.capsys.readouterr()        
-        assert "[1] testUUID1 linux 192.168.1.1\n[2] testUUID2 linux 192.168.1.1\n[3] testUUID3 windows 192.168.1.1\n" == captured.out 
+        assert "[1] testUUID1 Linux 192.168.1.1\n[2] testUUID2 Linux 192.168.1.1\n[3] testUUID3 Windows 192.168.1.1\n" == captured.out 
 
         #test_cli.do_find("active agents") 
         # with mock.patch.object(__builtins__, 'input', lambda: 'Y'):
